@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101310">
+  <title>缠序 · 结构研究台</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到主内容</a>
+  <div class="app-shell">
+    <aside class="rail" aria-label="主导航">
+      <a class="brand" href="#main" aria-label="缠序首页"><span class="brand-mark">缠</span><span>缠序<small>结构研究台</small></span></a>
+      <div class="rail-label">研究空间</div>
+      <button class="nav-item active" data-view="chart"><span class="nav-glyph">⌁</span>结构图</button>
+      <button class="nav-item" data-view="watchlist"><span class="nav-glyph">☆</span>自选股</button>
+      <button class="nav-item" data-view="backtest"><span class="nav-glyph">↗</span>策略回测</button>
+      <button class="nav-item" data-view="daily"><span class="nav-glyph">▤</span>新B点清单</button>
+      <button class="nav-item" data-view="rules"><span class="nav-glyph">≋</span>规则说明</button>
+      <div class="rail-spacer"></div>
+      <div class="local-note"><span class="local-dot"></span><span>结构与回测<br><small>均在本机计算</small></span></div>
+      <div class="rail-foot">CHÁNXÙ · RESEARCH 01</div>
+    </aside>
+
+    <main id="main" class="main">
+      <header class="topbar">
+        <div class="crumb"><span>研究空间</span><b>/</b><strong id="page-title">结构图</strong></div>
+        <div class="top-actions">
+          <span class="data-state"><i id="data-indicator"></i><span id="data-state">合成示例 · 日线</span></span>
+          <label class="button button-quiet file-button">CSV备用<input id="file-input" type="file" accept=".csv,text/csv"></label>
+          <button class="button button-primary" id="analyze-btn">重新分析 <span>↻</span></button>
+        </div>
+      </header>
+
+      <section class="page-head">
+        <div><h1>缠论结构研究台</h1><p class="subhead">选标的 → 看确认信号与证据 → 运行模拟回测。本版仅日线。</p></div>
+        <div class="head-meta"><span class="meta-label">当前标的</span><strong id="instrument">示例指数 · DEMO</strong><span id="date-range">—</span></div>
+      </section>
+
+      <div class="market-toolbar" aria-label="在线行情设置">
+        <div class="symbol-field symbol-search-field"><label for="symbol-input">行情代码 / 中文名称搜索</label><input id="symbol-input" value="510300.SS" placeholder="输入代码、中文名或名称片段" spellcheck="false" autocomplete="off" role="combobox" aria-label="行情代码或中文名称" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="symbol-results" aria-activedescendant="" aria-describedby="symbol-help symbol-search-status"><div id="symbol-search-panel" class="symbol-search-panel" hidden><p id="symbol-search-status" role="status" aria-live="polite">输入名称后从候选中选择证券</p><div id="symbol-results" role="listbox" aria-label="证券搜索候选"></div><p id="symbol-search-coverage"></p></div></div>
+        <label><span>常用标的</span><select id="common-symbol" aria-label="常用标的"><option value="">选择常用标的</option><option value="510300.SS">沪深300ETF · 510300.SS</option><option value="000001.SZ">平安银行 · 000001.SZ</option><option value="600519.SS">贵州茅台 · 600519.SS</option><option value="^SSEC">上证指数 · ^SSEC</option><option value="^HSI">恒生指数 · ^HSI</option><option value="AAPL">苹果 · AAPL</option></select></label>
+        <label><span>历史范围 · 日线</span><select id="range-input" aria-label="行情范围"><option value="6mo">近6个月</option><option value="1y">近1年</option><option value="2y" selected>近2年</option><option value="5y">近5年</option></select></label>
+        <button class="button button-primary" id="fetch-btn">拉取行情</button>
+        <button class="button button-quiet" id="cancel-request" hidden>取消读取</button>
+        <button class="text-button" id="demo-btn">使用合成示例</button>
+        <p id="symbol-help" class="toolbar-help">输入中文或名称片段，确认候选后读取；代码可直接读取，如 510300.SS、000001.SZ、AAPL。↑↓ 选择、Enter 确认、Esc 关闭。当前目录覆盖及日期见候选区；行情搜索范围不等于每日选股筛选范围。</p>
+      </div>
+      <section class="session-clock" aria-label="A股交易时间与日线完成度">
+        <div class="session-clock-time"><span>北京时间 · 服务端校时</span><strong id="market-clock">正在同步时间…</strong><span id="market-phase">交易日判定中</span></div>
+        <div><span>最新可计算交易日</span><strong id="market-target">—</strong><small>交易日 15:00 后允许当天日K</small></div>
+        <div><span>当前图表实际截止</span><strong id="market-actual">—</strong><small id="market-data-ready">等待读取行情</small></div>
+        <div><span>目标日新 B 点</span><strong id="session-b-points">—</strong><small id="market-sync-status">按服务器日历判断，数据源可能延迟</small></div>
+      </section>
+      <div class="data-feedback" aria-label="数据来源与读取状态"><p id="source-status">当前为合成示例</p><p id="data-freshness"></p><p id="request-status" class="request-status" role="status" aria-live="polite">结构与回测在本机计算；无真实订单。</p></div>
+      <div class="restore-row"><p id="restore-status">参数与视图只保存在本浏览器；本地CSV内容不自动保存，可导出研究快照。</p><button id="reset-prefs" class="text-button">恢复默认参数与视图</button></div>
+
+      <section class="summary-grid" aria-label="市场与策略摘要">
+        <article class="summary-card price-card"><div class="summary-label">最新收盘 <span class="tiny-tag">CLOSE</span></div><strong id="latest-price">—</strong><div class="summary-foot"><span id="price-change">载入数据后计算</span><span id="latest-date">—</span></div></article>
+        <article class="summary-card"><div class="summary-label">结构状态 <span class="status-pip"></span></div><strong class="summary-value" id="trend-state">待计算</strong><div class="summary-foot">按当前已确认结构</div></article>
+        <article class="summary-card signal-card"><div class="summary-label">最近信号 <span class="tiny-tag">CONFIRMED</span></div><strong class="summary-value" id="latest-signal">无信号</strong><div class="summary-foot" id="signal-caption">仅显示已确认信号</div></article>
+        <article class="summary-card"><div class="summary-label">最大回撤 <span class="tiny-tag">BACKTEST</span></div><strong class="summary-value" id="summary-dd">—</strong><div class="summary-foot" id="summary-trades">运行回测后展示</div></article>
+      </section>
+
+      <section id="watchlist-view" class="watchlist-panel panel" aria-labelledby="watchlist-title">
+        <div class="panel-head watchlist-head"><div><h2 id="watchlist-title">自选股 <span id="watchlist-count">—</span></h2><p>保存在本机服务，重启保留；无云同步，不改变每日清单筛选范围。</p></div><button id="watchlist-refresh" class="button button-quiet">刷新自选</button></div>
+        <div class="watchlist-search"><label for="watchlist-query">添加证券 · 代码或中文名</label><div><input id="watchlist-query" type="search" placeholder="例如：600012、皖通高速、510300" autocomplete="off" aria-describedby="watchlist-search-status"><button id="watchlist-search-btn" class="button button-quiet">搜索</button></div><p id="watchlist-search-status" role="status" aria-live="polite">输入代码或中文名搜索后添加，不预填自选。</p><div id="watchlist-results" class="watchlist-results"></div></div>
+        <div class="watch-monitor-toolbar"><div class="watch-monitor-counts"><span>目标交易日 <b id="watch-monitor-target">待校时</b></span><span>已更新 <b id="watch-monitor-updated">0 / 0</b></span><span>失败 <b id="watch-monitor-failed">0</b></span><span>新 B 股票 <b id="watch-monitor-buys">待核验</b></span></div><div class="watch-monitor-actions"><button id="watch-monitor-refresh" class="button button-quiet" disabled>更新行情信号</button><button id="watch-monitor-cancel" class="button button-quiet" hidden>取消读取</button></div></div>
+        <p id="watch-monitor-note" class="watch-monitor-note" role="status" aria-live="polite">固定近2年日K；新 B 按最新完整交易日的确认日期判断，不是极值日。</p>
+        <p id="watchlist-status" class="watchlist-status" role="status" aria-live="polite">正在读取本机自选…</p><div id="watchlist-items" class="watchlist-items"></div>
+      </section>
+
+      <section class="workspace" id="chart-view">
+        <div class="chart-panel panel">
+          <div class="panel-head chart-head">
+            <div class="chart-identity"><span class="chart-section-label">K线与结构</span><div class="chart-identity-line"><h2 id="chart-instrument">合成示例 · DEMO</h2><button id="chart-watch-toggle" class="button button-quiet" disabled>加入自选</button></div><p id="chart-subtitle">示例数据 · 最新 120 根 · 结构随数据确认</p></div>
+            <div class="chart-tools"><div class="segmented" role="group" aria-label="显示区间"><button data-window="60">最近60根</button><button class="selected" data-window="120">最近120根</button><button data-window="all">全部日K</button></div><button class="icon-button" id="reset-zoom" aria-label="重置图表范围" title="返回最近120根">⟲</button></div>
+          </div>
+          <div class="legend" aria-label="结构图例"><span><i class="leg-candle"></i>K线</span><span><i class="leg-fractal"></i>分型</span><span><i class="leg-pen"></i>笔</span><span><i class="leg-segment"></i>线段代理</span><span><i class="leg-center"></i>中枢</span><span><i class="leg-buy">B</i>买点</span><span><i class="leg-sell">S</i>卖点</span></div>
+          <div class="layer-controls" aria-label="图表图层"><label><input type="checkbox" data-layer="fractals" checked>分型</label><label><input type="checkbox" data-layer="pens" checked>笔</label><label><input type="checkbox" data-layer="segments" checked>线段</label><label><input type="checkbox" data-layer="centers" checked>中枢</label><label><input type="checkbox" data-layer="signals" checked>信号</label></div>
+          <div class="chart-locator"><label>定位日期 <input id="chart-date" type="date" aria-label="定位日期"></label><button id="locate-date" class="text-button">定位日K</button><label class="signal-picker">信号清单 <select id="signal-select" aria-label="信号清单"><option value="">选择信号</option></select></label></div>
+          <div class="chart-wrap" id="chart-wrap"><svg id="price-chart" role="group" aria-label="K线结构图与可选信号"></svg><div class="chart-tooltip" id="chart-tooltip" hidden></div></div>
+          <div class="chart-foot"><span><i class="foot-dot amber"></i>结构为全样本重绘；信号按确认日冻结</span><span id="chart-counts">—</span><span>悬停查看 · 点击信号查看证据</span></div>
+        </div>
+        <aside class="inspector panel" aria-label="结构证据">
+          <div class="panel-head"><div><h2>结构证据</h2><p>选中一处信号查看判定依据</p></div><span class="inspect-icon">⌕</span></div>
+          <div id="signal-detail" class="detail-empty"><span class="empty-glyph">⌁</span><strong>等待选择信号</strong><p>点击图表中的买卖标记，查看确认K线、结构位置与失效价。</p></div>
+          <div class="inspector-divider"></div>
+          <div class="inspector-block"><div class="block-label">当前结构快照</div><div class="snapshot-row"><span>有效分型</span><b id="snap-fractals">—</b></div><div class="snapshot-row"><span>确认笔</span><b id="snap-pens">—</b></div><div class="snapshot-row"><span>线段代理</span><b id="snap-segments">—</b></div><div class="snapshot-row"><span>重叠区间</span><b id="snap-centers">—</b></div></div>
+          <div class="method-note"><span class="note-mark">i</span><p><b>口径提示</b><br>线段与买卖点含实验性判定代理，详情见「规则说明」。不代表原典唯一解释。</p></div>
+        </aside>
+      </section>
+
+      <section class="backtest-section panel" id="backtest-view">
+        <div class="panel-head backtest-head"><div><p class="eyebrow">复盘而非预测</p><h2>策略回测</h2><p>收盘确认信号，下一根K线尝试成交；止损按触发价模拟。</p></div><button class="button button-primary" id="backtest-btn">运行回测 <span>↗</span></button></div>
+        <div class="backtest-controls">
+          <label>初始资金 <span class="input-wrap"><input id="capital-input" type="number" value="100000" min="0.01" step="any" aria-label="初始资金" aria-describedby="capital-error"> <span id="currency-unit">报价单位</span></span><span id="capital-error" class="field-error"></span></label>
+          <label>单次仓位 <span class="input-wrap"><input id="position-input" type="number" value="20" min="0.01" max="100" step="any" aria-label="单次仓位百分比" aria-describedby="position-error"> %</span><span id="position-error" class="field-error"></span></label>
+          <label>单笔风险预算 <span class="input-wrap"><input id="risk-input" type="number" value="1" min="0.01" max="100" step="any" aria-label="单笔风险预算百分比" aria-describedby="risk-error"> %</span><span id="risk-error" class="field-error"></span></label>
+          <label>交易单位 <span class="input-wrap"><input id="lot-input" type="number" value="100" min="1" step="1" aria-label="交易单位" aria-describedby="lot-error"> 份/股</span><span id="lot-error" class="field-error"></span></label>
+          <label>佣金 <span class="input-wrap"><input id="fee-input" type="number" value="3" min="0" max="9999.999" step="any" aria-label="佣金bp" aria-describedby="fee-error"> bp</span><span id="fee-error" class="field-error"></span></label>
+          <label>滑点 <span class="input-wrap"><input id="slippage-input" type="number" value="5" min="0" max="9999.999" step="any" aria-label="滑点bp" aria-describedby="slippage-error"> bp</span><span id="slippage-error" class="field-error"></span></label>
+          <label class="check-label"><input id="t1-input" type="checkbox" checked> 按 T+1 可卖</label>
+        </div>
+        <div class="parameter-help"><p id="parameter-status" role="status">参数仅作研究默认值，不代表适合任何账户。</p><p id="market-assumptions"></p><details><summary>看懂仓位、风险预算、bp 与 T+1</summary><p>1 bp = 0.01%；3 bp 即成交金额的0.03%。滑点模拟成交价偏离。按 T+1 可卖：买入当日不能卖出，止损可能延后。</p><p>例如初始资金10万、仓位20%，名义仓位上限2万；风险1%对应风险预算1000。最终数量同时受仓位、止损价差及费用、可用现金、交易单位约束，取较小值。本版单持仓，不会自动加仓。</p><p>分型是三K转折；笔连接有效顶底；线段、中枢、背驰和买卖点含实验代理。B为买点，S为卖点，数字1/2/3对应一、二、三类信号。已确认不代表未来获利。</p></details></div>
+        <div class="metrics-grid">
+          <div class="metric"><span>区间收益</span><b id="metric-return">—</b></div><div class="metric"><span>最大回撤</span><b id="metric-dd">—</b></div><div class="metric"><span>胜率</span><b id="metric-win">—</b></div><div class="metric"><span title="已平仓盈利总额 ÷ 已平仓亏损总额绝对值">获利因子 ⓘ</span><b id="metric-pf">—</b></div><div class="metric"><span>已平仓交易</span><b id="metric-count">—</b></div><div class="metric"><span>累计费用</span><b id="metric-fees">—</b></div>
+        </div>
+        <div class="account-breakdown" id="account-breakdown">回测后展示现金、持仓与盈亏分解</div>
+        <div class="equity-block"><div class="equity-title"><div><h3>账户净值</h3><p id="equity-caption">运行回测后显示净值曲线</p></div><span class="equity-key"><i></i>组合净值</span></div><div class="equity-wrap"><svg id="equity-chart" role="img" aria-label="回测账户净值曲线"></svg><div id="equity-empty" class="equity-empty">尚无回测结果</div></div><p id="equity-readout" class="equity-readout" aria-live="polite"></p></div>
+        <div class="trades-block"><div class="trades-title"><div><h3>逐笔交易</h3><span id="trade-count-label">等待回测</span></div><button class="text-button" id="export-trades" disabled>导出 CSV ↓</button></div><div class="table-scroll"><table><thead><tr><th>序号</th><th>入场日期</th><th>类型</th><th class="num">入场价</th><th>退出日期</th><th>退出原因</th><th class="num">退出价</th><th class="num">净盈亏</th></tr></thead><tbody id="trade-rows"><tr><td colspan="8" class="table-empty">选择数据并运行回测，逐笔记录将在这里出现。</td></tr></tbody></table></div></div>
+        <div class="backtest-disclosure"><span>!</span> 模型采用单持仓、下一根开盘、结构止损、T+1 和可调费用；未模拟涨跌停排队、印花税与分红。</div>
+      </section>
+
+      <section id="daily-view" class="daily-panel panel" aria-labelledby="daily-title">
+        <div class="panel-head daily-head"><div><h2 id="daily-title">收盘新 B 点清单</h2><p>沪深主板 · 排除科创板、创业板、北交所及 ST / *ST</p></div><button id="daily-refresh" class="button button-quiet">刷新清单</button></div>
+        <div class="daily-meta"><span>报告确认日 <b id="daily-report-date">—</b></span><span>生成时间 <b id="daily-generated">—</b></span><span>当前目标日 <b id="daily-target-date">—</b></span><strong id="daily-state-badge" class="daily-badge">待读取</strong></div>
+        <p id="daily-status" class="daily-status" role="status" aria-live="polite">正在读取已有扫描报告…</p>
+        <div class="daily-stats" aria-label="清单扫描摘要"><div><span>候选股票</span><b id="daily-candidate-count">—</b></div><div><span>新 B 信号</span><b id="daily-signal-count">—</b></div><div><span>成功分析 / 范围内</span><b id="daily-coverage">—</b></div><div><span>未覆盖</span><b id="daily-uncovered">—</b></div></div>
+        <p id="daily-progress" class="daily-help"></p>
+        <div class="daily-filters"><label>信号类型<select id="daily-type"><option value="all">全部 B 点</option><option value="B1">包含 B1 · 一买</option><option value="B2">包含 B2 · 二买</option><option value="B3">包含 B3 · 三买</option></select></label><label class="daily-search">股票搜索<input id="daily-search" type="search" placeholder="输入代码或中文名称" autocomplete="off"></label><label class="daily-clean"><input id="daily-clean" type="checkbox">仅无异常标记</label><button id="daily-export" class="button button-quiet" disabled>下载筛选 CSV</button></div>
+        <details class="daily-order"><summary>排序：无异常优先，组内按流动性近似降序</summary><p>严格保留原报告顺序：先无异常标记，后有标记；组内按确认日收盘价 × 成交股数降序，相同按股票代码升序。这是流动性近似，不是实际成交额；不按 B1 / B2 / B3 优先，也不是胜率排名。收藏与筛选不改变原顺序。</p></details>
+        <div class="daily-table-scroll" role="region" aria-label="新B点候选表，可横向滚动" tabindex="0"><table class="daily-table"><thead><tr><th scope="col">股票</th><th scope="col">B 类型</th><th scope="col" class="num">确认日收盘</th><th scope="col">结构失效参考</th><th scope="col">距失效位</th><th scope="col">标记</th><th scope="col">证据</th></tr></thead><tbody id="daily-rows"><tr><td colspan="7" class="table-empty">清单载入中…</td></tr></tbody></table></div>
+        <div class="daily-pagination"><span id="daily-page-info">—</span><div><button id="daily-prev" class="button button-quiet" disabled>上一页</button><button id="daily-next" class="button button-quiet" disabled>下一页</button></div></div>
+        <div class="daily-notes"><p>同票多信号分别保留；筛选“包含 B1 / B2 / B3”不隐藏该票的其它 B 点。</p><p>日期指信号<strong>确认日</strong>，不是转折极值日。使用未复权日线和当前实验代理规则，收盘价不是买入执行价。“查看K线”打开该报告的冻结输入，不拉最新行情替代。</p><p>“刷新清单”和每分钟自动检查只读取已有报告，<strong>不会启动全市场扫描</strong>。行情源未齐或扫描未完成时，旧清单不会被称作当天清单。</p></div>
+      </section>
+
+      <section class="rules-section panel" id="rules-view">
+        <div class="panel-head"><div><h2>规则与边界</h2><p>每个图形都有对应的算法口径。歧义不会被藏在图表后面。</p></div></div>
+        <div class="rules-grid">
+          <article class="rule-card"><span class="rule-index">01</span><h3>包含处理</h3><p>相邻K线高低区间互相包含时合并；由最近非包含走势方向决定取高高或低低。方向未确定时使用前一有效方向。</p></article>
+          <article class="rule-card"><span class="rule-index">02</span><h3>分型与笔</h3><p>严格三K分型，中间K线高低同时高于或低于两侧。采用老笔间隔约束：相邻异向分型端点之间至少 5 根处理后 K 线（mergedIndex 间隔 ≥ 4）；同类分型只保留更极值者。</p></article>
+          <article class="rule-card"><span class="rule-index">03</span><h3>线段与中枢</h3><p>线段以至少三笔和重叠作为展示代理，不实现原典特征序列破坏判定。中枢由连续重叠笔的价格区间计算，ZG 必须大于 ZD。</p></article>
+          <article class="rule-card"><span class="rule-index">04</span><h3>买卖点代理</h3><p>一买/一卖：同向价格极值与MACD 柱幅减弱代理；二买/二卖：一买/一卖之后完成反向腿，再回调/反弹未破原极值；三买/三卖：离开中枢并回抽不进入区间。</p></article>
+          <article class="rule-card"><span class="rule-index">05</span><h3>回测成交约定</h3><p>已确认信号下一根开盘尝试成交。止损若跳空穿越，以较差的首个可成交价模拟；同一根K线先后顺序无法判断时采取保守处理。佣金与滑点可调。</p></article>
+          <article class="rule-card"><span class="rule-index">06</span><h3>已知局限</h3><p>缠论笔、线段、走势级别、背驰及中枢延伸边界存在多种口径。当前首版是透明的研究代理，不是完整、唯一或已验证盈利的实现。</p></article>
+        </div>
+        <div class="rules-footer"><span>当前数据</span><b id="rules-data-note">示例数据在本地生成，不代表真实行情。</b><span>规则版本</span><b>chan-proxy · 0.2</b></div>
+      </section>
+
+      <footer class="footer"><span>缠序 · 结构研究台</span><span>仅本地处理 · 不连接券商 · 不自动下单</span><div class="research-actions"><button id="download-data" class="text-button">下载当前CSV</button><button id="export-snapshot" class="text-button">导出研究快照</button><label class="button button-quiet file-button">导入研究快照<input id="snapshot-input" type="file" accept=".json,application/json"></label></div></footer>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="engine.js"></script>
+  <script src="watchlist_monitor.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

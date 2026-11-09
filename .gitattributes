@@ -1,0 +1,2 @@
+# Keep original source bytes stable for SHA256-based audit and replay.
+* -text

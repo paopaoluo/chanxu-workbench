@@ -1,0 +1,2 @@
+# Python runtime uses only the standard library.
+# Python 3.12 and Node.js 24 were used for this backup verification.
